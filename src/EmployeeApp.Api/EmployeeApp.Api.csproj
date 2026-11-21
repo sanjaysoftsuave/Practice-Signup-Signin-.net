@@ -1,0 +1,28 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <!-- TargetFramework, Nullable, ImplicitUsings and TreatWarningsAsErrors come from ../../Directory.Build.props (4.5).
+       Sdk="Microsoft.NET.Sdk.Web" (not plain Microsoft.NET.Sdk) is what brings in ASP.NET Core. -->
+
+  <PropertyGroup>
+    <!-- 6.6 The /// comments on controllers and DTOs show up as descriptions in the OpenAPI document.
+         CS1591 ("missing XML comment") is silenced so not every public member needs one. -->
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
+    <UserSecretsId>3274615f-954c-4b6a-95ea-ff5b89e78cce</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- 6.6 Builds the OpenAPI JSON document (/openapi/v1.json) -->
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.14" />
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.14" />
+    <!-- 6.6 Only the Swagger UI web page (/swagger) that reads that JSON. Since .NET 9, the template has no UI. -->
+    <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" Version="11.0.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- The API is a thin HTTP layer on top of the Week 1 business logic -->
+    <ProjectReference Include="..\EmployeeApp.Core\EmployeeApp.Core.csproj" />
+    <ProjectReference Include="..\EmployeeApp.Infrastructure\EmployeeApp.Infrastructure.csproj" />
+  </ItemGroup>
+
+</Project>

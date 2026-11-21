@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- TargetFramework, Nullable, ImplicitUsings and TreatWarningsAsErrors come from ../../Directory.Build.props (4.5). -->
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\EmployeeApp.Core\EmployeeApp.Core.csproj" />
+  </ItemGroup>
+
+</Project>

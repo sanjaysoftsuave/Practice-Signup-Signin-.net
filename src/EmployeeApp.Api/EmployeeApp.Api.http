@@ -1,0 +1,246 @@
+# Day 6 + Day 10 evidence: success AND failure requests for every endpoint.
+# How to use: start the API (F5), then click "Send request" above any request (Visual Studio or VS Code REST Client).
+# Run them top to bottom: the data is in memory, so restarting the API resets it to the 5 seeded employees.
+#
+# Day 10: every /api/employees request needs a token. Run the AUTH section first:
+#   1. paste YOUR admin password (dotnet user-secrets list --project src/EmployeeApp.Api) into @adminPassword below.
+#      It is only on your screen; DON'T commit this file with the real password in it.
+#   2. run "login as Admin" and "login as User": the named requests save their tokens into {{adminToken}} / {{userToken}}.
+
+@host = http://localhost:5286
+@adminPassword = PASTE_YOUR_Auth:AdminPassword_HERE
+@adminToken = {{loginAdmin.response.body.$.accessToken}}
+@userToken = {{loginUser.response.body.$.accessToken}}
+
+### ===================== AUTH (Day 10) =====================
+
+### 201 Created: sign up a normal account (role "User": read-only)
+POST {{host}}/api/auth/signup
+Content-Type: application/json
+
+{
+  "email": "priya@example.com",
+  "password": "Secret123"
+}
+
+### 409 Conflict: the same email again (case doesn't matter)
+POST {{host}}/api/auth/signup
+Content-Type: application/json
+
+{
+  "email": "PRIYA@example.com",
+  "password": "Secret123"
+}
+
+### 400 Bad Request: weak password (no digit) and invalid email
+POST {{host}}/api/auth/signup
+Content-Type: application/json
+
+{
+  "email": "not-an-email",
+  "password": "password"
+}
+
+### 200 OK: log in as the User. The token is saved as {{userToken}}.
+# @name loginUser
+POST {{host}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "priya@example.com",
+  "password": "Secret123"
+}
+
+### 200 OK: log in as the Admin. The token is saved as {{adminToken}}.
+# @name loginAdmin
+POST {{host}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@employeeapp.local",
+  "password": "{{adminPassword}}"
+}
+
+### 401 Unauthorized: wrong password (same message as an unknown email, on purpose)
+POST {{host}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "priya@example.com",
+  "password": "Wrong1234"
+}
+
+### 200 OK: who am I? (reads the claims from the token)
+GET {{host}}/api/auth/me
+Authorization: Bearer {{userToken}}
+
+### 401 Unauthorized: no token at all
+GET {{host}}/api/employees
+
+### 401 Unauthorized: a made-up token (the signature check fails)
+GET {{host}}/api/employees
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxIiwicm9sZSI6IkFkbWluIn0.fake-signature
+
+### 403 Forbidden: a User may read, but not hire
+POST {{host}}/api/employees
+Authorization: Bearer {{userToken}}
+Content-Type: application/json
+
+{
+  "name": "Divya",
+  "departmentCode": "ENG",
+  "monthlySalary": 70000
+}
+
+### 200 OK: a User may read
+GET {{host}}/api/employees
+Authorization: Bearer {{userToken}}
+
+# From here on, every request uses the Admin token.
+
+### ===================== GET (read) =====================
+
+### 200 OK: list all employees
+GET {{host}}/api/employees
+Authorization: Bearer {{adminToken}}
+Accept: application/json
+
+### 200 OK: one department (query string, case doesn't matter)
+GET {{host}}/api/employees?department=eng
+Authorization: Bearer {{adminToken}}
+
+### 400 Bad Request: department doesn't exist
+GET {{host}}/api/employees?department=XYZ
+Authorization: Bearer {{adminToken}}
+
+### 200 OK: one employee
+GET {{host}}/api/employees/2
+Authorization: Bearer {{adminToken}}
+
+### 404 Not Found: no employee 99
+GET {{host}}/api/employees/99
+Authorization: Bearer {{adminToken}}
+
+### 404 Not Found: "abc" doesn't match the {id:int} route constraint
+GET {{host}}/api/employees/abc
+Authorization: Bearer {{adminToken}}
+
+### ===================== POST (create) =====================
+
+### 201 Created: new employee gets Id 6, Location header = /api/employees/6
+POST {{host}}/api/employees
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "name": "Divya",
+  "departmentCode": "eng",
+  "monthlySalary": 85000,
+  "role": "Manager",
+  "location": "Remote",
+  "managerId": 1,
+  "email": "divya@example.com"
+}
+
+### 400 Bad Request: [ApiController] automatic validation (empty name, negative salary, bad email)
+POST {{host}}/api/employees
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "name": "",
+  "departmentCode": "ENG",
+  "monthlySalary": -5,
+  "email": "not-an-email"
+}
+
+### 400 Bad Request: business rule from Core (intern salary over 50,000)
+POST {{host}}/api/employees
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "name": "Tia",
+  "departmentCode": "ENG",
+  "monthlySalary": 60000,
+  "role": "Intern"
+}
+
+### 400 Bad Request: manager 99 doesn't exist (a mistake in the BODY, so 400, not 404)
+POST {{host}}/api/employees
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "name": "Tia",
+  "departmentCode": "ENG",
+  "monthlySalary": 30000,
+  "managerId": 99
+}
+
+### 400 Bad Request: role must be text ("Manager"), not a number
+POST {{host}}/api/employees
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "name": "Tia",
+  "departmentCode": "ENG",
+  "monthlySalary": 30000,
+  "role": 7
+}
+
+### ===================== PUT (replace) =====================
+
+### 204 No Content: replace employee 6 (role and department change too)
+PUT {{host}}/api/employees/6
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "name": "Divya K",
+  "departmentCode": "SALES",
+  "monthlySalary": 95000,
+  "role": "FullTime"
+}
+
+### 200 OK: check the change
+GET {{host}}/api/employees/6
+Authorization: Bearer {{adminToken}}
+
+### 404 Not Found: no employee 99 to replace
+PUT {{host}}/api/employees/99
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "name": "Nobody",
+  "departmentCode": "ENG",
+  "monthlySalary": 1000
+}
+
+### 400 Bad Request: an employee can't be their own manager
+PUT {{host}}/api/employees/6
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "name": "Divya K",
+  "departmentCode": "SALES",
+  "monthlySalary": 95000,
+  "managerId": 6
+}
+
+### ===================== DELETE =====================
+
+### 409 Conflict: Ravi (1) still manages Priya and Arun
+DELETE {{host}}/api/employees/1
+Authorization: Bearer {{adminToken}}
+
+### 204 No Content: delete employee 6
+DELETE {{host}}/api/employees/6
+Authorization: Bearer {{adminToken}}
+
+### 404 Not Found: employee 6 is already gone (run the line above first)
+DELETE {{host}}/api/employees/6
+Authorization: Bearer {{adminToken}}

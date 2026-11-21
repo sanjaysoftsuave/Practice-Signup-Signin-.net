@@ -1,0 +1,14 @@
+<Project>
+  <!--
+    4.5 Tooling: MSBuild imports this file automatically into every project in this folder
+    and below, so the shared settings live in ONE place instead of being copied into each .csproj.
+  -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <!-- Every warning fails the build. Most importantly CS4014 ("call not awaited"),
+         the fire-and-forget async bug from 4.2. -->
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+  </PropertyGroup>
+</Project>

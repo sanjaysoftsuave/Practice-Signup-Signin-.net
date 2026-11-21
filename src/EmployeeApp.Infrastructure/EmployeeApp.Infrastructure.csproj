@@ -1,0 +1,24 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- TargetFramework, Nullable, ImplicitUsings and TreatWarningsAsErrors come from ../../Directory.Build.props (4.5).
+       Infrastructure = the DATA layer: everything that talks to PostgreSQL lives here, so Core stays database-free. -->
+
+  <ItemGroup>
+    <!-- EF Core + the PostgreSQL provider (Npgsql). Pinned to 10.x to match net10.0 (EF Core 11 needs .NET 11). -->
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.3" />
+    <!-- Pins EF Core itself to the same version as the Design package below, for every project that references this one -->
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="10.0.15" />
+    <!-- PostgreSQL style names: MonthlySalary → monthly_salary, so SQL needs no "QuotedNames" -->
+    <PackageReference Include="EFCore.NamingConventions" Version="10.0.1" />
+    <!-- Needed only by the `dotnet ef` tool (migrations); not shipped with the app -->
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.15">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\EmployeeApp.Core\EmployeeApp.Core.csproj" />
+  </ItemGroup>
+
+</Project>

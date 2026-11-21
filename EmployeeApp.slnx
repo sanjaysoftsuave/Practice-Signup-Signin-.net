@@ -1,0 +1,17 @@
+<Solution>
+  <!-- Week 2: the Api project is listed first so Visual Studio picks it as the startup project (F5).
+       To run the Week 1 console app, right-click EmployeeApp.Cli > Set as Startup Project. -->
+  <Folder Name="/src/">
+    <Project Path="src/EmployeeApp.Api/EmployeeApp.Api.csproj" />
+    <Project Path="src/EmployeeApp.Cli/EmployeeApp.Cli.csproj" />
+    <Project Path="src/EmployeeApp.Core/EmployeeApp.Core.csproj" />
+    <Project Path="src/EmployeeApp.Infrastructure/EmployeeApp.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/EmployeeApp.Tests/EmployeeApp.Tests.csproj" />
+  </Folder>
+  <Folder Name="/Solution Items/">
+    <File Path="Directory.Build.props" />
+    <File Path="README.md" />
+  </Folder>
+</Solution>
